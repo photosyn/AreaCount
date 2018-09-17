@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -26,7 +27,11 @@ namespace AreaCount
             if(!dealRecord)
             {
                 toolStripButtonRecord.Visible = false;
-                toolStripSeparator3.Visible = false;
+                toolStripButtonQuery.Visible = false;
+                toolStripSeparator4.Visible = false;
+                toolStripSeparator5.Visible = false;
+                groupBox2.Visible = false;
+                groupBox4.Visible = false;
                 Thread thread = new Thread(ThreadMethod);
                 thread.IsBackground = true;
                 thread.Name = "AreaCount";
@@ -34,6 +39,7 @@ namespace AreaCount
             }
             else
             {
+                listViewRealTime.ContextMenuStrip = contextMenuStrip1;
                 toolStripButtonRealTime.Visible = false;
                 toolStripButtonCancel.Visible = false;
                 toolStripButtonRefresh.Visible = false;
@@ -100,7 +106,7 @@ namespace AreaCount
             {
                 this.listViewRealTime.Items.AddRange(list as ListViewItem[]);
             }
-
+            labelTotal.Text = String.Format("在厂总人数：{0}", this.listViewRealTime.Items.Count);
         }
 
         private string convertToSqlStr(string devList)
@@ -244,6 +250,52 @@ namespace AreaCount
             else
             {
                 toolStripButtonRecord.Enabled = false;
+            }
+        }
+
+        private void ToolStripMenuItemCheck_Click(object sender, EventArgs e)
+        {
+            if (this.listViewRealTime.FocusedItem != null)
+            {
+                ListViewItem viewItem = this.listViewRealTime.FocusedItem;
+                FrmRecordHandle frmRecord = new FrmRecordHandle(viewItem.Text, viewItem.Tag as string);
+                frmRecord.ShowDialog();
+            }
+        }
+
+        private void toolStripButtonQuery_Click(object sender, EventArgs e)
+        {
+            if(textBoxName.Text.Length > 0)
+            {
+                listViewRealTime.Select();
+                ListViewItem foundItem = listViewRealTime.FindItemWithText(textBoxName.Text, true, 1, true);
+                if (foundItem != null)
+                {
+                    foundItem.Selected = true;
+                    foundItem.Focused = true;
+                }
+            }
+            else
+            {
+                MessageBox.Show("请输入查询条件", "提示");
+            }
+        }
+
+        private void ToolStripMenuItemQuery_Click(object sender, EventArgs e)
+        {
+            if (textBoxName.Text.Length > 0)
+            {
+                listViewRealTime.Select();
+                ListViewItem foundItem = listViewRealTime.FindItemWithText(textBoxName.Text, true, 1, true);
+                if (foundItem != null)
+                {
+                    foundItem.Selected = true;
+                    foundItem.Focused = true;
+                }
+            }
+            else
+            {
+                MessageBox.Show("请输入查询条件", "提示");
             }
         }
     }

@@ -8,9 +8,10 @@ namespace AreaCount
 {
     public partial class XtraReportPerson : DevExpress.XtraReports.UI.XtraReport
     {
-        public XtraReportPerson()
+        public XtraReportPerson(string title)
         {
             InitializeComponent();
+            xrLabel1.Text = title;
         }
 
     }

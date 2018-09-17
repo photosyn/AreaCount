@@ -19,6 +19,7 @@ namespace AreaCount
         string m_DevIds = "";
         string m_PersonCondition = "";
         string m_RolesCondition = "";
+        string m_Title = "";
         bool m_NormalChecked = true;
         bool m_GroupChecked = true;
         string m_PersonId = "";
@@ -508,6 +509,14 @@ namespace AreaCount
             {
                 m_RolesCondition = String.Format(" and F.Base_RoleID={0}", (comboBoxCardType.SelectedItem as RoleInfo).Value);
             }
+            if(radioButtonNormal.Checked)
+            {
+                m_Title = "国核维科生产区域人员实时统计表";
+            }
+            else
+            {
+                m_Title = "国核维科生产区域异常人员实时统计表";
+            }
             m_NormalChecked = radioButtonNormal.Checked;
             m_GroupChecked = radioButtonGroup.Checked;
             m_PersonId = textBoxPerNo.Tag as string;
@@ -524,30 +533,65 @@ namespace AreaCount
             queryPersonAndPerview();
         }
 
+        private bool checkQueryRange()
+        {
+            int secondleve = 0;
+            foreach (TreeNode newNode in this.treeViewGroup.Nodes)
+            {
+                if(newNode.ImageIndex == 1)
+                {
+                    return false;
+                }
+                foreach(TreeNode newNode2 in newNode.Nodes)
+                {
+                    if (newNode2.ImageIndex == 1)
+                    {
+                        secondleve++;
+                        if(secondleve > 1)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
         private void toolStripButtonQuery_Click(object sender, EventArgs e)
         {
+            bool querySupported = true;
             if (mGroupsId.Length > 0)
             {
                 updateQueryParam();
+                if (!m_NormalChecked && m_GroupChecked)
+                {
+                    querySupported = checkQueryRange();
+                }
+                if(querySupported)
+                {
+                    BackgroundWorker worker = new BackgroundWorker();
+                    worker.WorkerSupportsCancellation = true;
+                    //CheckLoading为窗体显示过程中需要处理算法的方法
+                    worker.DoWork += new DoWorkEventHandler(CheckLoading);
+                    worker.RunWorkerAsync();
 
-                BackgroundWorker worker = new BackgroundWorker();
-                worker.WorkerSupportsCancellation = true;
-                //CheckLoading为窗体显示过程中需要处理算法的方法
-                worker.DoWork += new DoWorkEventHandler(CheckLoading);
-                worker.RunWorkerAsync();
+                    //显示进度窗体
+                    FrmLoading f = new FrmLoading(worker);
+                    f.ShowDialog(this);
+                    //queryPersonAndPerview();
 
-                //显示进度窗体
-                FrmLoading f = new FrmLoading(worker);
-                f.ShowDialog(this);
-                //queryPersonAndPerview();
-
-                XtraReportPerson reportPerson = new XtraReportPerson();
-                reportPerson.DataSource = reportInfoList;
-                ReportPrintTool printTool = new ReportPrintTool(reportPerson);
-                //printTool.ShowRibbonPreview();
-                //printTool.ShowRibbonPreviewDialog(UserLookAndFeel.Default);
-                //printTool.ShowPreview();
-                printTool.ShowPreviewDialog(UserLookAndFeel.Default);
+                    XtraReportPerson reportPerson = new XtraReportPerson(m_Title);
+                    reportPerson.DataSource = reportInfoList;
+                    ReportPrintTool printTool = new ReportPrintTool(reportPerson);
+                    //printTool.ShowRibbonPreview();
+                    //printTool.ShowRibbonPreviewDialog(UserLookAndFeel.Default);
+                    //printTool.ShowPreview();
+                    printTool.ShowPreviewDialog(UserLookAndFeel.Default);
+                }
+                else
+                {
+                    MessageBox.Show("异常出厂人员按群查询时间较长，因此不支持人员信息群中的顶层和第二层多选查询!", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             else
             {
